@@ -1,33 +1,40 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter as Router, Route, Switch, Link } from "react-router-dom";
-import PrivateRoute from "react-private-route";
+import { BrowserRouter as Router, Route, Switch, Link, Redirect } from "react-router-dom";
 
 import Login from "./Login";
 import Home from "./Home";
 import NotFound from "./NotFound";
 
+// Custom PrivateRoute component
+const PrivateRoute = ({ component: Component, isAuthenticated, redirect, ...rest }) => (
+  <Route {...rest} render={(props) => (
+    isAuthenticated === true
+      ? <Component {...props} />
+      : <Redirect to={redirect} />
+  )} />
+);
+
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      isLoggedIn: false
+      isLoggedIn: false,
     };
-    this.isLoggedIn = this.isLoggedIn.bind(this);
     this.login = this.login.bind(this);
   }
-  isLoggedIn() {
-    return this.state.isLoggedIn;
-  }
+
   login() {
     this.setState({ isLoggedIn: !this.state.isLoggedIn });
   }
+
   render() {
+    const { isLoggedIn } = this.state;
     return (
       <Router>
-        <div className={"main-container"}>
+        <div className="main-container">
           <div>
-            {this.isLoggedIn()
+            {isLoggedIn
               ? "Logged in, Now you can enter Playground"
               : "You are not authenticated, Please login first"}
           </div>
@@ -44,15 +51,15 @@ class App extends React.Component {
           <Switch>
             <Route
               path="/login"
-              component={() => (
-                <Login login={this.login} isLogged={this.state.isLoggedIn} />
+              render={(props) => (
+                <Login {...props} login={this.login} isLogged={isLoggedIn} />
               )}
             />
             <PrivateRoute
               exact
               path="/home"
               component={Home}
-              isAuthenticated={!!this.isLoggedIn()}
+              isAuthenticated={isLoggedIn}
               redirect="/login"
             />
             <Route component={NotFound} />
@@ -63,4 +70,4 @@ class App extends React.Component {
   }
 }
 
-export default App
+export default App;
